@@ -6,8 +6,31 @@ namespace Riptide.Demos.PlayerHosted
 {
     internal enum MessageId : ushort
     {
+        // Relay - Client to Server to Other Clients
         SpawnPlayer = 1,
-        PlayerMovement
+        PlayerMovement,
+
+        // Server to client
+        activeScene,
+        playerSpawned,
+        playerMovement,
+        playerHealthChanged,
+        playerActiveWeaponUpdated,
+        playerAmmoChanged,
+        playerDied,
+        playerRespawned,
+        projectileSpawned,
+        projectileMovement,
+        projectileCollided,
+        projectileHitmarker,
+
+        // Client to Server 
+        name,
+        registerPlayer,
+        input,
+        switchActiveWeapon,
+        primaryUse,
+        reload,
     }
 
     public class NetworkManager : MonoBehaviour
@@ -27,6 +50,8 @@ namespace Riptide.Demos.PlayerHosted
                 }
             }
         }
+
+        public bool IsHost => Server.IsRunning;
 
         [SerializeField] private ushort port;
         [SerializeField] private ushort maxPlayers;
@@ -50,14 +75,15 @@ namespace Riptide.Demos.PlayerHosted
             RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
 
             Server = new Server();
-            Server.ClientConnected += PlayerJoined;
+            Server.ClientConnected += S_NewPlayerConnected;
+            // Server.ClientDisconnected += S_PlayerLeft;
             Server.RelayFilter = new MessageRelayFilter(typeof(MessageId), MessageId.SpawnPlayer, MessageId.PlayerMovement);
 
             Client = new Client();
             Client.Connected += DidConnect;
             Client.ConnectionFailed += FailedToConnect;
-            Client.ClientDisconnected += PlayerLeft;
             Client.Disconnected += DidDisconnect;
+            Client.ClientDisconnected += PlayerLeft;
         }
 
         private void FixedUpdate()
@@ -78,6 +104,7 @@ namespace Riptide.Demos.PlayerHosted
         {
             Server.Start(port, maxPlayers);
             Client.Connect($"127.0.0.1:{port}");
+            GameLogicServer.Singleton.LoadScene(1);
         }
 
         internal void JoinGame(string ipString)
@@ -93,12 +120,18 @@ namespace Riptide.Demos.PlayerHosted
 
         private void DidConnect(object sender, EventArgs e)
         {
-            Player.Spawn(Client.Id, UIManager.Singleton.Username, Vector3.zero, true);
+            Player.RegisterPlayer(UIManager.Singleton.Username);
+            //Player.Spawn(Client.Id, UIManager.Singleton.Username, Vector3.zero, true);
         }
 
         private void FailedToConnect(object sender, EventArgs e)
         {
             UIManager.Singleton.BackToMain();
+        }
+
+        private void S_NewPlayerConnected(object sender, ServerConnectedEventArgs e)
+        {
+            GameLogicServer.Singleton.PlayerCountChanged(e.Client.Id);
         }
 
         private void PlayerJoined(object sender, ServerConnectedEventArgs e)
@@ -111,6 +144,12 @@ namespace Riptide.Demos.PlayerHosted
         private void PlayerLeft(object sender, ClientDisconnectedEventArgs e)
         {
             Destroy(Player.List[e.Id].gameObject);
+        }
+
+        private void S_PlayerLeft(object sender, ServerDisconnectedEventArgs e)
+        {
+            if (Player.List.TryGetValue(e.Client.Id, out Player player))
+                Destroy(player.gameObject);
         }
 
         private void DidDisconnect(object sender, DisconnectedEventArgs e)
