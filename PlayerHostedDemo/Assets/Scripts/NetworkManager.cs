@@ -134,13 +134,6 @@ namespace Riptide.Demos.PlayerHosted
             GameLogicServer.Singleton.PlayerCountChanged(e.Client.Id);
         }
 
-        private void PlayerJoined(object sender, ServerConnectedEventArgs e)
-        {
-            foreach (Player player in Player.List.Values)
-                if (player.Id != e.Client.Id)
-                    player.SendSpawn(e.Client.Id);
-        }
-
         private void PlayerLeft(object sender, ClientDisconnectedEventArgs e)
         {
             Destroy(Player.List[e.Id].gameObject);

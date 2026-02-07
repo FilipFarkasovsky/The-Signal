@@ -50,29 +50,24 @@ namespace Riptide.Demos.PlayerHosted
         public void InstantRespawn()
         {
             TeleportToTeamSpawnpoint();
-            //if (movement != null)
-            //    movement.Enabled(true);
-
             health = maxHealth;
             SendRespawned();
         }
 
         private void TeleportToTeamSpawnpoint()
-        {
-            //if (movement == null) 
-            //    return;
-
-            //if (team == Team.green )
-            //    movement.Teleport(GameLogicServer.Singleton.GreenSpawn.position);
-            //else if (team == Team.orange)
-            //    movement.Teleport(GameLogicServer.Singleton.OrangeSpawn.position);            
-
+        {         
             if (team == Team.green )
                 Move(GameLogicServer.Singleton.GreenSpawn.position, Vector3.forward);
             else if (team == Team.orange)
                 Move(GameLogicServer.Singleton.OrangeSpawn.position, Vector3.forward);
         }
 
+        private void Move(Vector3 newPosition, Vector3 forward)
+        {
+            transform.position = newPosition;
+            forward.y = 0;
+            transform.forward = forward.normalized;
+        }
 
         private IEnumerator DelayedRespawn()
         {
@@ -81,7 +76,6 @@ namespace Riptide.Demos.PlayerHosted
             InstantRespawn();
         }
 
-        
         internal static void Spawn(ushort id, string username)
         {
             foreach (Player otherPlayer in List.Values)
@@ -98,10 +92,7 @@ namespace Riptide.Demos.PlayerHosted
                     position = GameLogicServer.Singleton.OrangeSpawn.position;
             }
 
-
             SendSpawned(id, username, position, (byte)team);
-
-
         }
 
         internal static void OnSpawn(ushort id, string username, Vector3 position, byte team)
@@ -122,41 +113,15 @@ namespace Riptide.Demos.PlayerHosted
 
 
         #region Messages
-        [MessageHandler((ushort)MessageId.playerRespawned)]
-        private static void PlayerRespawned(Message message)
-        {
-            if (List.TryGetValue(message.GetUShort(), out Player player))
-                player.Respawned(message.GetVector3());
-        }
-
-        [MessageHandler((ushort)MessageId.playerSpawned)]
-        private static void SpawnPlayer(Message message)
-        {
-            OnSpawn(message.GetUShort(), message.GetString(), message.GetVector3(), message.GetByte());
-        }
-        private static void SendSpawned(ushort id, string username, Vector3 position, byte team)
-        {
-            Message message = Message.Create(MessageSendMode.Reliable, MessageId.playerSpawned);
-            message.AddUShort(id);
-            message.AddString(username);
-            message.AddVector3(position);
-            message.AddByte((byte)team);
-            NetworkManager.Singleton.Server.SendToAll(message);
-        }
-
+  
         public void Respawned(Vector3 position)
         {
             CharacterController cc = GetComponent<CharacterController>();
 
             if (cc != null)
             {
-                // Disable the CharacterController to avoid collision issues
                 cc.enabled = false;
-
-                // Teleport
                 transform.position = position;
-
-                // Re-enable the CharacterController
                 cc.enabled = true;
             }
             else
@@ -173,6 +138,32 @@ namespace Riptide.Demos.PlayerHosted
             //    UIManager.Singleton.HealthUpdated(health, maxHealth, false);
         }
 
+        private void SendRespawned()
+        {
+            Message message = Message.Create(MessageSendMode.Reliable, MessageId.playerRespawned);
+            message.AddUShort(Id);
+            message.AddVector3(transform.position);
+            Debug.Log(transform.position);
+            NetworkManager.Singleton.Server.SendToAll(message);
+        }
+
+        [MessageHandler((ushort)MessageId.playerRespawned)]
+        private static void PlayerRespawned(Message message)
+        {
+            if (List.TryGetValue(message.GetUShort(), out Player player))
+                player.Respawned(message.GetVector3());
+        }
+
+        private static void SendSpawned(ushort id, string username, Vector3 position, byte team)
+        {
+            Message message = Message.Create(MessageSendMode.Reliable, MessageId.playerSpawned);
+            message.AddUShort(id);
+            message.AddString(username);
+            message.AddVector3(position);
+            message.AddByte((byte)team);
+            NetworkManager.Singleton.Server.SendToAll(message);
+        }
+
         private void SendSpawned(ushort toClientId)
         {
             Message message = Message.Create(MessageSendMode.Reliable, MessageId.playerSpawned);
@@ -183,46 +174,23 @@ namespace Riptide.Demos.PlayerHosted
             NetworkManager.Singleton.Server.Send(message, toClientId);
         }
 
-        private void SendRespawned()
+        [MessageHandler((ushort)MessageId.playerSpawned)]
+        private static void SpawnPlayer(Message message)
         {
-            Message message = Message.Create(MessageSendMode.Reliable, MessageId.playerRespawned);
+            OnSpawn(message.GetUShort(), message.GetString(), message.GetVector3(), message.GetByte());
+        }
+
+        public void SendMovement()
+        {
+            Message message = Message.Create(MessageSendMode.Unreliable, MessageId.PlayerMovement);
             message.AddUShort(Id);
             message.AddVector3(transform.position);
-            Debug.Log(transform.position);
-            NetworkManager.Singleton.Server.SendToAll(message);
-        }
-
-        [MessageHandler((ushort)MessageId.registerPlayer)]
-        private static void OnRegisterPlayer(ushort fromClientId, Message message)
-        {
-
-            Spawn(fromClientId, message.GetString());
-        }
-        #endregion
- 
-        private void Move(Vector3 newPosition, Vector3 forward)
-        {
-            transform.position = newPosition;
-            forward.y = 0;
-            transform.forward = forward.normalized;
-        }
-
-
-
-        #region Messages
-
-
-        internal void SendSpawn(ushort newPlayerId)
-        {
-            Message message = Message.Create(MessageSendMode.Reliable, MessageId.SpawnPlayer);
-            message.AddUShort(Id);
-            message.AddString(Username);
-            message.AddVector3(transform.position);
-            NetworkManager.Singleton.Server.Send(message, newPlayerId);
+            message.AddVector3(transform.forward);
+            NetworkManager.Singleton.Client.Send(message);
         }
 
         [MessageHandler((ushort)MessageId.PlayerMovement)]
-        private static void PlayerMovement(Message message)
+        private static void OnPlayerMovement(Message message)
         {
             ushort playerId = message.GetUShort();
             if (List.TryGetValue(playerId, out Player player))
@@ -235,6 +203,14 @@ namespace Riptide.Demos.PlayerHosted
             message.AddString(username);
             NetworkManager.Singleton.Client.Send(message);
         }
+
+        [MessageHandler((ushort)MessageId.registerPlayer)]
+        private static void OnRegisterPlayer(ushort fromClientId, Message message)
+        {
+
+            Spawn(fromClientId, message.GetString());
+        }
+
         #endregion
 
 

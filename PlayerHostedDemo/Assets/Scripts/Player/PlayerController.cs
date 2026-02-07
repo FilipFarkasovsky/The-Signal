@@ -88,18 +88,7 @@ namespace Riptide.Demos.PlayerHosted
             moveDirection.y = yVelocity;
             controller.Move(moveDirection);
 
-            SendMovement();
+            player.SendMovement();
         }
-
-        #region Messages
-        private void SendMovement()
-        {
-            Message message = Message.Create(MessageSendMode.Unreliable, MessageId.PlayerMovement);
-            message.AddUShort(player.Id);
-            message.AddVector3(transform.position);
-            message.AddVector3(transform.forward);
-            NetworkManager.Singleton.Client.Send(message);
-        }
-        #endregion
     }
 }
