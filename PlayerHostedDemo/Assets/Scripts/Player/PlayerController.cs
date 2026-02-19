@@ -5,7 +5,7 @@ namespace Riptide.Demos.PlayerHosted
     [RequireComponent(typeof(CharacterController))]
     public class PlayerController : MonoBehaviour
     {
-        [SerializeField] private Player player;
+        [SerializeField] private PlayerClient player;
         [SerializeField] private CharacterController controller;
         [SerializeField] private Transform camTransform;
         [SerializeField] private float gravity;
@@ -26,7 +26,7 @@ namespace Riptide.Demos.PlayerHosted
                 controller = GetComponent<CharacterController>();
 
             if (player == null)
-                player = GetComponent<Player>();
+                player = GetComponent<PlayerClient>();
 
             Initialize();
         }
@@ -127,7 +127,10 @@ namespace Riptide.Demos.PlayerHosted
             {
                 yVelocity = 0f;
                 if (inputs[4])
+                {
+                    Debug.Log("Jump");
                     yVelocity = jumpSpeed;
+                }
             }
             yVelocity += gravity;
 

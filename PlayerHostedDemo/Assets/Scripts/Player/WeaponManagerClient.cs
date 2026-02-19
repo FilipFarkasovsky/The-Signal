@@ -1,5 +1,6 @@
 using Riptide;
 using Riptide.Demos.PlayerHosted;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum WeaponType : byte
@@ -10,7 +11,7 @@ public enum WeaponType : byte
     laser
 }
 
-public class WeaponManager : MonoBehaviour
+public class WeaponManagerClient : MonoBehaviour
 {
     [SerializeField] private GameObject weaponModels;
 
@@ -26,20 +27,8 @@ public class WeaponManager : MonoBehaviour
     [SerializeField] private AudioSource laserAudioSource;
     [SerializeField] private Animator laserMuzzleFlash;
 
-    // SERVER
-    [SerializeField] private Player player;
-    [SerializeField] private Gun pistol;
-    [SerializeField] private Gun teleporter;
-    [SerializeField] private Gun laser;
-
-    private WeaponType activeType;
-    private Gun activeWeapon;
-
     private void OnValidate()
     {
-        if (player == null)
-            player = GetComponent<Player>();
-
         if (pistolModel != null)
         {
             pistolAudioSource = pistolModel.transform.parent.GetComponent<AudioSource>(); // Using pistolModel.GetComponentInParent<AudioSource>() somehow causes issues with the prefab saving the assigned value, but this works even though it *should* function identically...must be a Unity bug?
@@ -127,63 +116,22 @@ public class WeaponManager : MonoBehaviour
         }
     }
 
-    // SERVER
-    public void SetActiveWeapon(WeaponType type)
+    [MessageHandler((ushort)MessageId.playerActiveWeaponUpdated)]
+    private static void PlayerActiveWeaponUpdated(Message message)
     {
-        if (activeType == type)
-            return;
-
-        switch (type)
+        if (PlayerClient.List.TryGetValue(message.GetUShort(), out PlayerClient player))
         {
-            case WeaponType.none:
-                activeWeapon = null;
-                break;
-            case WeaponType.pistol:
-                activeWeapon = pistol;
-                break;
-            case WeaponType.teleporter:
-                activeWeapon = teleporter;
-                break;
-            case WeaponType.laser:
-                activeWeapon = laser;
-                break;
-            default:
-                Debug.LogError($"Can't set unknown weapon type '{type}' as active!");
-                return;
+            WeaponType newType = (WeaponType)message.GetByte();
+            player.WeaponManagerClient.SetWeaponActive(newType);
+
+            if (player.IsLocal)
+                UIManager.Singleton.ActiveWeaponUpdated(newType);
         }
-
-        activeType = type;
-        SendActiveWeaponUpdate(type);
     }
 
-    public void PrimaryUsePressed()
+    [MessageHandler((ushort)MessageId.playerAmmoChanged)]
+    private static void PlayerAmmoChanged(Message message)
     {
-        if (activeWeapon == null)
-            return;
-
-        activeWeapon.Shoot();
-    }
-
-    public void Reload()
-    {
-        if (activeWeapon == null)
-            return;
-
-        activeWeapon.Reload();
-    }
-
-    public void ResetWeapons()
-    {
-        pistol.ResetAmmo();
-        teleporter.ResetAmmo();
-        laser.ResetAmmo();
-    }
-
-    private void SendActiveWeaponUpdate(WeaponType type)
-    {
-        Message message = Message.Create(MessageSendMode.Reliable, MessageId.playerActiveWeaponUpdated);
-        message.AddUShort(player.Id);
-        message.AddByte((byte)type);
-        NetworkManager.Singleton.Server.SendToAll(message);
+        UIManager.Singleton.AmmoUpdated((WeaponType)message.GetByte(), message.GetByte(), message.GetUShort());
     }
 }

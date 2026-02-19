@@ -118,7 +118,6 @@ namespace Riptide.Demos.PlayerHosted
 
         public void ActiveWeaponUpdated(WeaponType type)
         {
-            Debug.Log("Active weapon updateed");
             switch (type)
             {
                 case WeaponType.none:

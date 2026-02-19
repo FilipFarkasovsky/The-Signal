@@ -13,7 +13,7 @@ public class ProjectileServer : MonoBehaviour
     [SerializeField] private int laserBounces;
 
     private ushort id;
-    private Player shooter;
+    private PlayerServer shooter;
     private float gravityAcceleration;
     private Vector3 velocity;
 
@@ -30,7 +30,7 @@ public class ProjectileServer : MonoBehaviour
         
         if (Physics.Raycast(transform.position, velocity.normalized, out RaycastHit hitInfo, velocity.magnitude))
         {
-            Player hitPlayer = hitInfo.collider.GetComponent<Player>();
+            PlayerServer hitPlayer = hitInfo.collider.GetComponent<PlayerServer>();
 
             if (hitPlayer == null) // Hit a non player
             {
@@ -71,7 +71,7 @@ public class ProjectileServer : MonoBehaviour
 
         Collide(hitInfo.point);
     }
-    private void Hit(RaycastHit hitInfo, Player player)
+    private void Hit(RaycastHit hitInfo, PlayerServer player)
     {
         Collide(hitInfo.point);
 
@@ -96,7 +96,7 @@ public class ProjectileServer : MonoBehaviour
         list.Remove(id);
     }
 
-    public static void Spawn(Player shooter, WeaponType type, Vector3 position, Vector3 initialVelocity)
+    public static void Spawn(PlayerServer shooter, WeaponType type, Vector3 position, Vector3 initialVelocity)
     {
         ProjectileServer projectile;
         switch (type)

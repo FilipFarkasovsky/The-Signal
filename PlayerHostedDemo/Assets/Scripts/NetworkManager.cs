@@ -155,7 +155,7 @@ namespace Riptide.Demos.PlayerHosted
 
         private void DidConnect(object sender, EventArgs e)
         {
-            Player.RegisterPlayer(UIManager.Singleton.Username);
+            PlayerClient.RegisterPlayer(UIManager.Singleton.Username);
             //Player.Spawn(Client.Id, UIManager.Singleton.Username, Vector3.zero, true);
         }
 
@@ -171,18 +171,14 @@ namespace Riptide.Demos.PlayerHosted
 
         private void PlayerLeft(object sender, ClientDisconnectedEventArgs e)
         {
-            Destroy(Player.List[e.Id].gameObject);
-        }
-
-        private void S_PlayerLeft(object sender, ServerDisconnectedEventArgs e)
-        {
-            if (Player.List.TryGetValue(e.Client.Id, out Player player))
-                Destroy(player.gameObject);
+            Destroy(PlayerServer.List[e.Id].gameObject);
+            Destroy(PlayerClient.List[e.Id].gameObject);
         }
 
         private void DidDisconnect(object sender, DisconnectedEventArgs e)
         {
-            foreach (Player player in Player.List.Values)
+            GameLogicShared.UnloadActiveScene();
+            foreach (PlayerClient player in PlayerClient.List.Values)
                 Destroy(player.gameObject);
 
             UIManager.Singleton.BackToMain();

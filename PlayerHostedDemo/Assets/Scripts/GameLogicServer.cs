@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 namespace Riptide.Demos.PlayerHosted
 {
-    public class GameLogicServer : MonoBehaviour
+    public class GameLogicServer : GameLogicShared
     {
         private static GameLogicServer _singleton;
         public static GameLogicServer Singleton
@@ -29,30 +29,19 @@ namespace Riptide.Demos.PlayerHosted
         public Transform GreenSpawn { get; set; }
         public Transform OrangeSpawn { get; set; }
 
-        [SerializeField] private float roundLengthSeconds;
+        [SerializeField] private float roundLengthSeconds = 300;
 
-        public GameObject LocalPlayerPrefab => localPlayerPrefab;
-        public GameObject PlayerPrefab => playerPrefab;
-        public GameObject BulletPrefabClient => bulletPrefabClient;
-        public GameObject TeleporterPrefabClient => teleporterPrefabClient;
-        public GameObject LaserPrefabClient => laserPrefabClient;
+        public GameObject ServerPlayerPrefab => serverPlayerPrefab;
         public GameObject BulletPrefabServer => bullePrefabServer;
         public GameObject TeleporterPrefabServer => teleportePrefabServer;
-        public GameObject LaserPrefabServer => lasePrefabServer;
+        public GameObject LaserPrefabServer => laserPrefabServer;
 
         [Header("Prefabs")]
-        [SerializeField] private GameObject localPlayerPrefab;
-        [SerializeField] private GameObject playerPrefab;
-
-        [SerializeField] private GameObject bulletPrefabClient;
-        [SerializeField] private GameObject teleporterPrefabClient;
-        [SerializeField] private GameObject laserPrefabClient;
+        [SerializeField] private GameObject serverPlayerPrefab;
 
         [SerializeField] private GameObject bullePrefabServer;
         [SerializeField] private GameObject teleportePrefabServer;
-        [SerializeField] private GameObject lasePrefabServer;
-
-        private byte activeScene;
+        [SerializeField] private GameObject laserPrefabServer;
 
         private void Awake()
         {
@@ -61,7 +50,7 @@ namespace Riptide.Demos.PlayerHosted
 
         public void PlayerCountChanged(ushort clientId)
         {
-            SendActiveScene(clientId);
+            SendActiveScene(clientId, activeScene);
 
             if (NetworkManager.Singleton.Server.ClientCount >= 2 && activeScene == 1)
                 StartCoroutine(LobbyCountdown()); // Start game when 2 or more players are connected
@@ -73,7 +62,7 @@ namespace Riptide.Demos.PlayerHosted
 
             if (NetworkManager.Singleton.Server.ClientCount >= 2)
             {
-                StartCoroutine(LoadSceneInBackground(2));
+                StartCoroutine(SetSceneAndRespawn(2));
                 StartCoroutine(GameCountdown());
             }
         }
@@ -82,72 +71,31 @@ namespace Riptide.Demos.PlayerHosted
         {
             yield return new WaitForSeconds(roundLengthSeconds);
 
-            StartCoroutine(LoadSceneInBackground(1));
+            StartCoroutine(SetSceneAndRespawn(1));
             StartCoroutine(LobbyCountdown());
         }
 
-        public void LoadScene(byte sceneBuildIndex)
+        private IEnumerator SetSceneAndRespawn(byte sceneIndex)
         {
-            StartCoroutine(LoadSceneInBackground(sceneBuildIndex));
-        }
+            SendNewActiveScene(sceneIndex);
+            yield return SetSceneCoroutine(sceneIndex);
 
-        private IEnumerator LoadSceneInBackground(byte sceneBuildIndex)
-        {
-            if (activeScene > 0)
-                SceneManager.UnloadSceneAsync(activeScene);
-
-            activeScene = sceneBuildIndex;
-            SendNewActiveScene();
- 
-
-            AsyncOperation loadingScene = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Additive);
-            while (!loadingScene.isDone)
-                yield return new WaitForSeconds(0.25f);
-            SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneBuildIndex));
-            
-            foreach (Player player in Player.List.Values)
+            foreach (PlayerServer player in PlayerServer.List.Values)
                 player.InstantRespawn();
         }
-        private void SendActiveScene(ushort toClientId)
+
+        private void SendActiveScene(ushort toClientId, byte sceneIndex)
         {
             Message message = Message.Create(MessageSendMode.Reliable, MessageId.activeScene);
-            message.AddByte(activeScene);
+            message.AddByte(sceneIndex);
             NetworkManager.Singleton.Server.Send(message, toClientId);
         }
 
-        private void SendNewActiveScene()
+        private void SendNewActiveScene(byte sceneIndex)
         {
             Message message = Message.Create(MessageSendMode.Reliable, MessageId.activeScene);
-            message.AddByte(activeScene);
+            message.AddByte(sceneIndex);
             NetworkManager.Singleton.Server.SendToAll(message);
-        }
-        [MessageHandler((ushort)MessageId.activeScene)]
-        private static void OnActiveScene(Message message)
-        {
-            GameLogicServer.Singleton.StartCoroutine(
-                GameLogicServer.Singleton.SetScene(message.GetByte()));
-        }
-
-        private IEnumerator SetScene(byte sceneBuildIndex)
-        {
-            if(sceneBuildIndex == activeScene &&
-                !SceneManager.GetSceneByBuildIndex(sceneBuildIndex).isLoaded)
-                yield break;
-
-            if(activeScene == 0 && sceneBuildIndex == 0)
-                yield break;
-
-            if (activeScene > 0)
-            {
-                SceneManager.UnloadSceneAsync(activeScene);
-                activeScene = 0;
-            }
-            activeScene = sceneBuildIndex;
-            AsyncOperation loadingScene = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Additive);
-            while (!loadingScene.isDone)
-                yield return new WaitForSeconds(0.25f);
-
-            SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneBuildIndex));
         }
     }
 }

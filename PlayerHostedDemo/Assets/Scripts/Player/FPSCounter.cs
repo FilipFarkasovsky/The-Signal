@@ -6,7 +6,7 @@ public class FPSCounter : MonoBehaviour
 {
     [SerializeField] private Text fpsText;
     [SerializeField] private float updateFrequency = 1f;
-    [SerializeField] private bool showMs = false;
+    [SerializeField] private bool showMs = true;
 
     private float timeSinceUpdate = 0.0f;
     private int framesSinceUpdate = 0;

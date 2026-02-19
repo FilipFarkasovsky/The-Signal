@@ -4,7 +4,7 @@ namespace Riptide.Demos.PlayerHosted
 {
     public class CameraController : MonoBehaviour
     {
-        [SerializeField] private Player player;
+        [SerializeField] private PlayerClient player;
         [SerializeField] private float sensitivity = 100f;
         [SerializeField] private float clampAngle = 85f;
 
@@ -14,7 +14,7 @@ namespace Riptide.Demos.PlayerHosted
         private void OnValidate()
         {
             if (player == null)
-                player = GetComponentInParent<Player>();
+                player = GetComponentInParent<PlayerClient>();
         }
         private void Start()
         {

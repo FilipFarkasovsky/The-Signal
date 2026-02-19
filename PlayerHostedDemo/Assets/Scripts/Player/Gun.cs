@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Gun : MonoBehaviour
 {
-    [SerializeField] private Player player;
+    [SerializeField] private PlayerServer player;
     [SerializeField] private WeaponType type;
     [SerializeField] private float shotSpeed;
     [SerializeField] private byte loadedAmmo;
@@ -17,7 +17,7 @@ public class Gun : MonoBehaviour
     private void OnValidate()
     {
         if (player == null)
-            player = GetComponentInParent<Player>();
+            player = GetComponentInParent<PlayerServer>();
     }
 
     private void Start()

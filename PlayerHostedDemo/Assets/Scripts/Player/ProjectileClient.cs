@@ -17,19 +17,19 @@ public class ProjectileClient : MonoBehaviour
 
     public static void Spawn(ushort id, WeaponType type, ushort shooterId, Vector3 position, Vector3 direction)
     {
-        Player.List[shooterId].WeaponManager.Shot(type);
+        PlayerClient.List[shooterId].WeaponManagerClient.Shot(type);
 
         ProjectileClient projectile;
         switch (type)
         {
             case WeaponType.pistol:
-                projectile = Instantiate(GameLogicServer.Singleton.BulletPrefabClient, position, Quaternion.LookRotation(direction)).GetComponent<ProjectileClient>();
+                projectile = Instantiate(GameLogicClient.Singleton.BulletPrefabClient, position, Quaternion.LookRotation(direction)).GetComponent<ProjectileClient>();
                 break;
             case WeaponType.teleporter:
-                projectile = Instantiate(GameLogicServer.Singleton.TeleporterPrefabClient, position, Quaternion.LookRotation(direction)).GetComponent<ProjectileClient>();
+                projectile = Instantiate(GameLogicClient.Singleton.TeleporterPrefabClient, position, Quaternion.LookRotation(direction)).GetComponent<ProjectileClient>();
                 break;
             case WeaponType.laser:
-                projectile = Instantiate(GameLogicServer.Singleton.LaserPrefabClient, position, Quaternion.LookRotation(direction)).GetComponent<ProjectileClient>();
+                projectile = Instantiate(GameLogicClient.Singleton.LaserPrefabClient, position, Quaternion.LookRotation(direction)).GetComponent<ProjectileClient>();
                 break;
             default:
                 Debug.LogError($"Can't spawn unknown projectile type '{type}'!");
