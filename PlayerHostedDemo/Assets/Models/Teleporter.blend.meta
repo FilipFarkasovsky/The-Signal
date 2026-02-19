@@ -3,7 +3,32 @@ guid: 9f6416a414f213b4eaecd18141084487
 ModelImporter:
   serializedVersion: 20200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Back
+    second: {fileID: 2100000, guid: 0b81183ed568c5c48a7eebc072507067, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Barrel
+    second: {fileID: 2100000, guid: 0b81183ed568c5c48a7eebc072507067, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Ring
+    second: {fileID: 2100000, guid: 0b81183ed568c5c48a7eebc072507067, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Science
+    second: {fileID: 2100000, guid: 30dc370b164eefc43b95744fc796dad0, type: 3}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Util
+    second: {fileID: 2100000, guid: c73f3726904fc4946bb1c0c63cd212f4, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -41,8 +66,8 @@ ModelImporter:
     sortHierarchyByName: 1
     importVisibility: 1
     importBlendShapes: 1
-    importCameras: 1
-    importLights: 1
+    importCameras: 0
+    importLights: 0
     fileIdsGeneration: 2
     swapUVChannels: 0
     generateSecondaryUV: 0

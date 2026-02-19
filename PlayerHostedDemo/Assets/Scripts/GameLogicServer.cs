@@ -31,6 +31,26 @@ namespace Riptide.Demos.PlayerHosted
 
         [SerializeField] private float roundLengthSeconds;
 
+        public GameObject LocalPlayerPrefab => localPlayerPrefab;
+        public GameObject PlayerPrefab => playerPrefab;
+        public GameObject BulletPrefabClient => bulletPrefabClient;
+        public GameObject TeleporterPrefabClient => teleporterPrefabClient;
+        public GameObject LaserPrefabClient => laserPrefabClient;
+        public GameObject BulletPrefabServer => bullePrefabServer;
+        public GameObject TeleporterPrefabServer => teleportePrefabServer;
+        public GameObject LaserPrefabServer => lasePrefabServer;
+
+        [Header("Prefabs")]
+        [SerializeField] private GameObject localPlayerPrefab;
+        [SerializeField] private GameObject playerPrefab;
+
+        [SerializeField] private GameObject bulletPrefabClient;
+        [SerializeField] private GameObject teleporterPrefabClient;
+        [SerializeField] private GameObject laserPrefabClient;
+
+        [SerializeField] private GameObject bullePrefabServer;
+        [SerializeField] private GameObject teleportePrefabServer;
+        [SerializeField] private GameObject lasePrefabServer;
 
         private byte activeScene;
 

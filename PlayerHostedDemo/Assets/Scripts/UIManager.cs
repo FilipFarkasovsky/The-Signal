@@ -24,7 +24,16 @@ namespace Riptide.Demos.PlayerHosted
         [SerializeField] private GameObject mainMenu;
         [SerializeField] private GameObject gameMenu;
         [SerializeField] private InputField usernameField;
+
+        [SerializeField] private GameObject gameUI;
+        [SerializeField] private Slider healthbar;
+        [SerializeField] private WeaponUI pistolUI;
+        [SerializeField] private WeaponUI teleporterUI;
+        [SerializeField] private WeaponUI laserUI;
         [SerializeField] private InputField hostIPField;
+        [SerializeField] private AudioSource hurtAudio;
+
+
 
         internal string Username => usernameField.text;
 
@@ -37,8 +46,17 @@ namespace Riptide.Demos.PlayerHosted
         {
             mainMenu.SetActive(false);
             gameMenu.SetActive(true);
+            gameUI.SetActive(true);  
 
             NetworkManager.Singleton.StartHost();
+        }
+
+        public void HealthUpdated(float health, float maxHealth, bool playHurtSound)
+        {
+            healthbar.value = health / maxHealth;
+
+            if (playHurtSound)
+                hurtAudio.Play();
         }
 
         public void JoinClicked()
@@ -52,6 +70,7 @@ namespace Riptide.Demos.PlayerHosted
             NetworkManager.Singleton.JoinGame(hostIPField.text);
             mainMenu.SetActive(false);
             gameMenu.SetActive(true);
+            gameUI.SetActive(true);
         }
 
         public void LeaveClicked()
@@ -64,6 +83,7 @@ namespace Riptide.Demos.PlayerHosted
         {
             mainMenu.SetActive(true);
             gameMenu.SetActive(false);
+            gameUI.SetActive(false);
 
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
@@ -75,6 +95,56 @@ namespace Riptide.Demos.PlayerHosted
                 gameMenu.SetActive(true);
             else
                 gameMenu.SetActive(false);
+        }
+
+        public void AmmoUpdated(WeaponType type, byte loaded, ushort total)
+        {
+            switch (type)
+            {
+                case WeaponType.pistol:
+                    pistolUI.UpdateAmmo(loaded, total);
+                    break;
+                case WeaponType.teleporter:
+                    teleporterUI.UpdateAmmo(loaded, total);
+                    break;
+                case WeaponType.laser:
+                    laserUI.UpdateAmmo(loaded, total);
+                    break;
+                default:
+                    Debug.Log($"Can't update ammo display for unknown weapon type '{type}'!");
+                    break;
+            }
+        }
+
+        public void ActiveWeaponUpdated(WeaponType type)
+        {
+            Debug.Log("Active weapon updateed");
+            switch (type)
+            {
+                case WeaponType.none:
+                    pistolUI.SetActive(false);
+                    teleporterUI.SetActive(false);
+                    laserUI.SetActive(false);
+                    break;
+                case WeaponType.pistol:
+                    pistolUI.SetActive(true);
+                    teleporterUI.SetActive(false);
+                    laserUI.SetActive(false);
+                    break;
+                case WeaponType.teleporter:
+                    pistolUI.SetActive(false);
+                    teleporterUI.SetActive(true);
+                    laserUI.SetActive(false);
+                    break;
+                case WeaponType.laser:
+                    pistolUI.SetActive(false);
+                    teleporterUI.SetActive(false);
+                    laserUI.SetActive(true);
+                    break;
+                default:
+                    Debug.Log($"Can't set UI as active for unknown weapon type '{type}'!");
+                    break;
+            }
         }
     }
 }

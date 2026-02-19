@@ -11,6 +11,11 @@ namespace Riptide.Demos.PlayerHosted
         private float verticalRotation;
         private float horizontalRotation;
 
+        private void OnValidate()
+        {
+            if (player == null)
+                player = GetComponentInParent<Player>();
+        }
         private void Start()
         {
             verticalRotation = transform.localEulerAngles.x;

@@ -8,22 +8,22 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Back
-    second: {fileID: 2100000, guid: 6e5526998637acf498036c8d54feebe8, type: 2}
+    second: {fileID: 2100000, guid: 0b81183ed568c5c48a7eebc072507067, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Barrel
-    second: {fileID: 2100000, guid: 6e5526998637acf498036c8d54feebe8, type: 2}
+    second: {fileID: 2100000, guid: 0b81183ed568c5c48a7eebc072507067, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Ring
-    second: {fileID: 2100000, guid: caab503b9b33dc14c87edaa9f295bc20, type: 2}
+    second: {fileID: 2100000, guid: 0b81183ed568c5c48a7eebc072507067, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: Util
-    second: {fileID: 2100000, guid: 6e5526998637acf498036c8d54feebe8, type: 2}
+    second: {fileID: 2100000, guid: 0b81183ed568c5c48a7eebc072507067, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -61,8 +61,8 @@ ModelImporter:
     sortHierarchyByName: 1
     importVisibility: 1
     importBlendShapes: 1
-    importCameras: 1
-    importLights: 1
+    importCameras: 0
+    importLights: 0
     fileIdsGeneration: 2
     swapUVChannels: 0
     generateSecondaryUV: 0

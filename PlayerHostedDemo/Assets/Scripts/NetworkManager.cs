@@ -23,6 +23,7 @@ namespace Riptide.Demos.PlayerHosted
         projectileMovement,
         projectileCollided,
         projectileHitmarker,
+        sync,
 
         // Client to Server 
         name,
@@ -52,9 +53,11 @@ namespace Riptide.Demos.PlayerHosted
         }
 
         public bool IsHost => Server.IsRunning;
+        public ushort CurrentTick { get; private set; } = 0;
 
-        [SerializeField] private ushort port;
-        [SerializeField] private ushort maxPlayers;
+
+        [SerializeField] private ushort port = 7777;
+        [SerializeField] private ushort maxPlayers = 10;
         [Header("Prefabs")]
         [SerializeField] private GameObject playerPrefab;
         [SerializeField] private GameObject localPlayerPrefab;
@@ -64,6 +67,31 @@ namespace Riptide.Demos.PlayerHosted
 
         internal Server Server { get; private set; }
         internal Client Client { get; private set; }
+
+        private ushort _serverTick;
+        public ushort ServerTick
+        {
+            get => _serverTick;
+            private set
+            {
+                _serverTick = value;
+                InterpolationTick = (ushort)(value - TicksBetweenPositionUpdates);
+            }
+        }
+        public ushort InterpolationTick { get; private set; }
+        private ushort _ticksBetweenPositionUpdates = 2;
+        public ushort TicksBetweenPositionUpdates
+        {
+            get => _ticksBetweenPositionUpdates;
+            private set
+            {
+                _ticksBetweenPositionUpdates = value;
+                InterpolationTick = (ushort)(ServerTick - value);
+            }
+        }
+
+        [SerializeField] private ushort tickDivergenceTolerance = 1;
+
 
         private void Awake()
         {
@@ -90,8 +118,15 @@ namespace Riptide.Demos.PlayerHosted
         {
             if (Server.IsRunning)
                 Server.Update();
-            
+
+            if (CurrentTick % 200 == 0 & Server.IsRunning)
+                SendSync();
+
+            CurrentTick++;
+
             Client.Update();
+            ServerTick++;
+
         }
 
         private void OnApplicationQuit()
@@ -151,6 +186,29 @@ namespace Riptide.Demos.PlayerHosted
                 Destroy(player.gameObject);
 
             UIManager.Singleton.BackToMain();
+        }
+
+        private void SendSync()
+        {
+            Message message = Message.Create(MessageSendMode.Unreliable, (ushort)MessageId.sync);
+            message.AddUShort(CurrentTick);
+
+            Server.SendToAll(message);
+        }
+
+        private void SetTick(ushort serverTick)
+        {
+            if (Mathf.Abs(ServerTick - serverTick) > tickDivergenceTolerance)
+            {
+                Debug.Log($"Client tick: {ServerTick} -> {serverTick}");
+                ServerTick = serverTick;
+            }
+        }
+
+        [MessageHandler((ushort)MessageId.sync)]
+        public static void Sync(Message message)
+        {
+            Singleton.SetTick(message.GetUShort());
         }
     }
 }
